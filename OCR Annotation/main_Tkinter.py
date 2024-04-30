@@ -5,11 +5,11 @@ import pandas as pd
 import os
 
 # Define global variables
-csv_file_path = "labels.csv"         # Replace with CSV File
-image_folder_path = "images"         # Replace with Image Files Folder
+csv_file_path = ""         # Initialize with empty string
+image_folder_path = ""     # Initialize with empty string
 
-df = pd.read_csv(csv_file_path)
-image_references = {}  # Dictionary to hold references to images
+df = pd.DataFrame()        # Empty DataFrame to store annotations
+image_references = {}      # Dictionary to hold references to images
 
 def display_image_and_annotation(image_path, annotation):
     image = Image.open(image_path)
@@ -136,6 +136,30 @@ def delete_image_command():
 def clear_success_message():
     success_label.config(text="")
 
+def select_folder():
+    global image_folder_path
+    folder_selected = filedialog.askdirectory()
+    if folder_selected:
+        image_folder_path = folder_selected
+        refresh_treeview()
+
+def select_csv_file():
+    global csv_file_path
+    file_selected = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+    if file_selected:
+        csv_file_path = file_selected
+        refresh_treeview()
+
+def refresh_treeview():
+    global tree, df
+    tree.delete(*tree.get_children())
+    if os.path.exists(csv_file_path):
+        df = pd.read_csv(csv_file_path)
+        for filename in df['filename']:
+            image_path = f"{image_folder_path}/{filename}"
+            annotation = df[df['filename'] == filename]['words'].values[0]
+            item = tree.insert("", "end", text=filename, values=(image_path, annotation, ""))
+
 def main():
     global root, tree, tree_selection, image_label, annotation_entry, previous_annotations_frame, check_mark_label
     root = tk.Tk()
@@ -146,18 +170,19 @@ def main():
     files_frame = tk.Frame(root, bg="lightgrey")
     files_frame.pack(side=tk.LEFT, fill=tk.Y)
 
+    # Upload buttons
+    select_folder_button = tk.Button(files_frame, text="Select Image Folder", command=select_folder)
+    select_folder_button.pack(pady=10)
+
+    select_csv_button = tk.Button(files_frame, text="Select CSV File", command=select_csv_file)
+    select_csv_button.pack(pady=10)
+
     # Treeview for displaying filenames
     tree = ttk.Treeview(files_frame, columns=("Image", "Annotation", "Edit"), show="headings", selectmode="browse")
     tree.heading("Image", text="Image")
     tree.heading("Annotation", text="Annotation")
     tree.heading("Edit", text="Edit")
     tree.pack(side=tk.LEFT, fill=tk.Y)
-
-    # Populate treeview with data
-    for filename in df['filename']:
-        image_path = f"{image_folder_path}/{filename}"
-        annotation = df[df['filename'] == filename]['words'].values[0]
-        item = tree.insert("", "end", text=filename, values=(image_path, annotation, ""))
 
     # Bind event for selecting a row
     tree.bind("<<TreeviewSelect>>", on_select)
