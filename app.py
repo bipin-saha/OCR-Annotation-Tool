@@ -2,8 +2,9 @@ import sys
 import csv
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QLabel, QLineEdit, QHBoxLayout, QSpacerItem, QSizePolicy, QGridLayout
-from PyQt5.QtGui import QPixmap, QClipboard
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
+from text_extraction import auto_annotate_ocr
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -73,6 +74,11 @@ class MainWindow(QMainWindow):
         self.next_button.clicked.connect(self.next_image)
         self.bottom_button_layout.addWidget(self.next_button)
         self.layout.addLayout(self.bottom_button_layout)
+
+        # Auto Annotation Button
+        self.auto_annotation_button = QPushButton("Auto Annotation")
+        self.auto_annotation_button.clicked.connect(self.auto_annotation_clicked)
+        self.layout.addWidget(self.auto_annotation_button)
 
         self.image_folder = ""
         self.csv_file = ""
@@ -232,6 +238,13 @@ class MainWindow(QMainWindow):
             os.remove(image_path)
         del self.csv_data[filename]
         self.update_csv()
+
+    def auto_annotation_clicked(self):
+        self.auto_annotate()
+
+    def auto_annotate(self):
+        #auto_annotate_ocr(self.csv_file, self.image_folder, self.csv_file)
+        self.show_temporary_message("Auto Annotation not implemented yet!")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Left:
